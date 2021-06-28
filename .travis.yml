@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t micaelmc/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run micaelmc/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t micaelmc/multi-client ./client
+  - docker build -t micaelmc/multi-nginx ./nginx
+  - docker build -t micaelmc/multi-server ./server
+  - docker build -t micaelmc/multi-worker ./worker
+
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push micaelmc/multi-client
+  - docker push micaelmc/multi-nginx
+  - docker push micaelmc/multi-server
+  - docker push micaelmc/multi-worker
